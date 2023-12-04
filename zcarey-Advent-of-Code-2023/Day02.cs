@@ -38,7 +38,25 @@ namespace zcarey_Advent_of_Code_2023
 
         public object Part2(string input)
         {
-            return "";
+            long total = 0;
+            foreach(GameInfo game in ParseInput(input))
+            {
+                Handful minCubes = new();
+                foreach(Handful handful in game.Handfuls)
+                {
+                    minCubes.Red = Math.Max(minCubes.Red, handful.Red);
+                    minCubes.Green = Math.Max(minCubes.Green, handful.Green);
+                    minCubes.Blue = Math.Max(minCubes.Blue, handful.Blue);
+                }
+                total += power(minCubes);
+            }
+
+            return total;
+        }
+
+        private static long power(Handful cubes)
+        {
+            return cubes.Red * cubes.Green * cubes.Blue;
         }
 
         private static IEnumerable<GameInfo> ParseInput(string input)
