@@ -24,5 +24,16 @@ namespace zcarey_Advent_of_Code_2023
             return reader.GetLines();
         }
 
+        public static void Increment<T>(this Dictionary<T, int> dict, T key, int inc)
+        {
+            if (!dict.ContainsKey(key))
+            {
+                dict[key] = inc;
+            } else
+            {
+                dict[key] += inc;
+            }
+        }
+
     }
 }

@@ -19,7 +19,20 @@ namespace zcarey_Advent_of_Code_2023
 
         public object Part2(string input)
         {
-            return "";
+            Dictionary<int, int> CardCounts = new();
+            foreach(Card card in ParseInput(input))
+            {
+                CardCounts.Increment(card.ID, 1);
+
+                int numberOfCards = CardCounts[card.ID]; // How many of this card ID we have
+                int matching = card.Left.Intersect(card.Right).Count();
+                for(int i = card.ID + 1; i <= card.ID + matching; i++)
+                {
+                    CardCounts.Increment(i, numberOfCards);
+                }
+            }
+
+            return CardCounts.Values.Sum(); // Cound the number of cards we have
         }
 
         static long Score(int matching)
