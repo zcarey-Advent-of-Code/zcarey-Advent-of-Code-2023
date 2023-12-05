@@ -33,76 +33,139 @@ foreach (var type in types)
     }
 }
 
+int? parseDayArg(string arg)
+{
+    if (arg == "" || arg == "l" || arg == "L")
+    {
+        // Get the latest day and run both parts
+        for (int i = DayTypes.Length - 1; i >= 0; i--)
+        {
+            if (DayTypes[i] != null)
+            {
+                return i;
+            }
+        }
+        return null;
+    } else
+    {
+        int result;
+        if (int.TryParse(arg, out result) && result >= 0 && result < DayTypes.Length && DayTypes[result] != null)
+        {
+            return result;
+        }
+        else
+        {
+            return null;
+        }
+    }
+}
+
+int? parsePartArg(string arg)
+{
+    int part;
+    if (int.TryParse(arg, out part) && part >= 1 && part <= 2)
+    {
+        return part;
+    } else
+    {
+        return null;
+    }
+}
+
 while (true)
 {
     Console.WriteLine("Enter the day (1-25) to run followed by the part (1-2). If no part is entered, both parts will be ran.");
     string input = Console.ReadLine() ?? "";
+    string[] arg = input.Split(' ');
 
-    string[] inputArgs = input.Split(' ');
-    if (inputArgs.Length < 1)
+    int day;
+    int part = 3;
+    string file = null;
+    if (arg.Length < 1)
     {
-        Console.WriteLine("Enter at least one argument.");
+        Console.WriteLine("Invalid args");
         continue;
     }
 
-    int dayInput;
-    int partInput;
-    if (!int.TryParse(inputArgs[0], out dayInput))
+    // First arg is always the day arg
+    int? temp = parseDayArg(arg[0]);
+    if (temp == null)
     {
-        Console.WriteLine("Bad input[0]");
+        Console.WriteLine("Invalid args");
         continue;
     }
+    day = (int)temp;
 
-    if (inputArgs.Length > 1)
+    if (arg.Length == 2)
     {
-        if (!int.TryParse(inputArgs[1], out partInput))
+        // Second arg could be a number for the part, or a text file to load
+        temp = parsePartArg(arg[1]);
+        if (temp == null)
         {
-            Console.WriteLine("Bad input[1]");
+            // arg 1 MUST be file
+            file = arg[1];
+        } else
+        {
+            // arg 1 is the part
+            part = (int)temp;
+        }
+
+    } else if (arg.Length >= 3)
+    {
+        // Second arg MUST be the part, third MUST be the text file
+        temp = parsePartArg(arg[1]);
+        if (temp == null)
+        {
+            Console.WriteLine("Invalid args");
             continue;
         }
-        if (partInput < 1 || partInput > 3)
-        {
-            Console.WriteLine("Bad input[1]");
-            continue;
-        }
-    } else
-    {
-        partInput = 3;
+        part = (int)temp;
+
+        file = arg[2];
     }
 
-    if (DayTypes[dayInput] == null)
+    // Check for valid code
+    if (DayTypes[day] == null)
     {
         Console.WriteLine("No code for that day was found!");
         continue;
     }
 
-    AdventOfCodeProblem? problem = (AdventOfCodeProblem)Activator.CreateInstance(DayTypes[dayInput]);
+    // Attempt to create a new object from the class
+    AdventOfCodeProblem? problem = (AdventOfCodeProblem)Activator.CreateInstance(DayTypes[day]);
     if (problem == null)
     {
         Console.WriteLine("Error occured instantiating type!");
         continue;
     }
 
+    // Check for default file name
+    if (file == null)
+    {
+        file = $"Day{day:00}.txt";
+    }
+
     // Load input data
     string inputText;
     try
     {
-        inputText = File.ReadAllText($"input/Day{dayInput:00}.txt");
-    }catch(Exception e)
+        inputText = File.ReadAllText($"input/{file}");
+    }
+    catch (Exception e)
     {
         Console.WriteLine("Failed to load input data! " + e.Message);
         continue;
     }
 
-    if ((partInput & 1) > 0)
+    if ((part & 1) > 0)
     {
-        Benchmark(problem.Part1, inputText, dayInput, 1);
+        Benchmark(problem.Part1, inputText, day, 1);
         Console.WriteLine();
         Console.WriteLine();
     }
-    if ((partInput & 2) > 0)
+    if ((part & 2) > 0)
     {
-        Benchmark(problem.Part2, inputText, dayInput, 2);
+        Benchmark(problem.Part2, inputText, day, 2);
         Console.WriteLine();
         Console.WriteLine();
     }
