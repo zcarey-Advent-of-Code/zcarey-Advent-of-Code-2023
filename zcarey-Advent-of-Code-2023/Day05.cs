@@ -15,7 +15,7 @@ namespace zcarey_Advent_of_Code_2023
         }
 
         public object Part2(string input)
-        { // 665754577 too high
+        { 
             (Almanac almanac, List<LargeRange> seeds) = ParseInput2(input);
             return almanac.GetLocations(seeds).Min(x => x.Start);
         }
