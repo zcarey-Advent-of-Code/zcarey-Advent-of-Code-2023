@@ -10,26 +10,32 @@ namespace zcarey_Advent_of_Code_2023
     {
         public object Part1(string input)
         {
-            (Almanac almanac, List<long> seeds) = ParseInput(input);
-            foreach(Converter converter in almanac.Converters)
-            {
-                for(int i = 0; i < seeds.Count; i++)
-                {
-                    long seed = seeds[i];
-                    long soil = converter.Convert(seed);
-                    seeds[i] = soil;
-                }
-            }
-
-            return seeds.Min();
+            (Almanac almanac, List<long> seeds) = ParseInput1(input);
+            return almanac.GetLocations(seeds.Select(x => new LargeRange(x, x))).Min(x => x.Start);
         }
 
         public object Part2(string input)
-        {
-            return "";
+        { // 665754577 too high
+            (Almanac almanac, List<LargeRange> seeds) = ParseInput2(input);
+            return almanac.GetLocations(seeds).Min(x => x.Start);
         }
 
-        static (Almanac, List<long>) ParseInput(string input)
+        static (Almanac, List<LargeRange>) ParseInput2(string input)
+        {
+            (Almanac almanac, List<long> seeds) = ParseInput1(input);
+
+            // Comvert the seeds into ranges
+            List<LargeRange> ranges = new();
+            for (int i = 0; i < seeds.Count() - 1; i += 2)
+            {
+                ranges.Add(LargeRange.FromLength(seeds[i], seeds[i + 1]));
+            }
+
+            // Convert the seeds to ranges
+            return (almanac, ranges);
+        }
+
+        static (Almanac, List<long>) ParseInput1(string input)
         {
             List<long> seeds = new();
             Almanac almanac = new Almanac();
@@ -68,34 +74,63 @@ namespace zcarey_Advent_of_Code_2023
             return (almanac, seeds);
         }
 
+        struct LargeRange
+        {
+            public long Start;
+            public long End;
+
+            public LargeRange(long start, long end)
+            {
+                this.Start = start;
+                this.End = end;
+            }
+
+            public static LargeRange FromLength(long start, long length)
+            {
+                return new LargeRange(start, start + length - 1);
+            }
+        }
+
         struct ConverterRange
         {
-            public long SrcRangeStart;
-            public long SrcRangeEnd;
-            public long DestRangeStart;
-            public long DestRangeEnd;
+            public LargeRange Source;
+            public LargeRange Destination;
 
-            public bool TryConvert(long input, out long result)
+            public void TryConvert(LargeRange input, List<LargeRange> converted, List<LargeRange> outOfRange)
             {
-                if (input >= SrcRangeStart && input <= SrcRangeEnd)
+                if (input.End < Source.Start || input.Start > Source.End)
                 {
-                    result = (input - SrcRangeStart) + DestRangeStart;
-                    return true;
-                } else
-                {
-                    result = default;
-                    return false;
+                    // Not in range!
+                    outOfRange.Add(input);
+                    return;
                 }
+
+                // Trim start section
+                if (input.Start < Source.Start)
+                {
+                    outOfRange.Add(new LargeRange(input.Start, Source.Start - 1));
+                    input.Start = Source.Start;
+                }
+
+                // Trim end section
+                if (input.End > Source.End)
+                {
+                    outOfRange.Add(new LargeRange(Source.End + 1, input.End));
+                    input.End = Source.End;
+                }
+
+                // With the input trimmed to this range, we can now safetly convert the input range
+                input.Start = (input.Start - Source.Start) + Destination.Start;
+                input.End = (input.End - Source.Start) + Destination.Start;
+                converted.Add(input);
             }
 
             public static ConverterRange Parse(string input)
             {
                 ConverterRange range = new();
                 long[] values = input.Split().Select(long.Parse).ToArray();
-                range.DestRangeStart = values[0];
-                range.SrcRangeStart = values[1];
-                range.DestRangeEnd = values[0] + values[2];
-                range.SrcRangeEnd = values[1] + values[2];
+                range.Source = LargeRange.FromLength(values[1], values[2]);
+                range.Destination = LargeRange.FromLength(values[0], values[2]);
                 return range;
             }
         }
@@ -105,26 +140,30 @@ namespace zcarey_Advent_of_Code_2023
             List<ConverterRange> ranges = new();
             public Converter() { }
 
-            public long Convert(long input)
+            public List<LargeRange> Convert(List<LargeRange> inputs)
             {
-                long result = default;
-                bool converted = false;
+                List<LargeRange> completed = new();
+                List<LargeRange> notConverted = new();
+                List<LargeRange> temp;
+
                 foreach(ConverterRange range in ranges)
                 {
-                    if (range.TryConvert(input, out result))
+                    foreach (LargeRange input in inputs)
                     {
-                        converted = true;
-                        break;
+                        range.TryConvert(input, completed, notConverted);
                     }
+                    inputs.Clear();
+                    temp = notConverted;
+
+                    notConverted = inputs;
+                    inputs = temp;
                 }
 
-                if (converted)
-                {
-                    return result;
-                } else
-                {
-                    return input;
-                }
+                // Now that all conversions have been completed,
+                // Any remaining inputs are mapped 1 to 1
+                completed.AddRange(inputs);
+
+                return completed;
             }
 
             public static Converter Parse(IEnumerator<string> input)
@@ -155,6 +194,16 @@ namespace zcarey_Advent_of_Code_2023
             public ref Converter TemperatureToHumidity => ref Converters[5];
             public ref Converter HumidityToLocation => ref Converters[6];
             public Almanac() { }
+
+            public List<LargeRange> GetLocations(IEnumerable<LargeRange> seeds)
+            {
+                List<LargeRange> results = new (seeds);
+                foreach (Converter converter in Converters)
+                {
+                    results = converter.Convert(results);
+                }
+                return results;
+            }
         }
     }
 
