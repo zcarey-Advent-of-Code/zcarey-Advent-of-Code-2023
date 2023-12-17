@@ -36,4 +36,23 @@ namespace zcarey_Advent_of_Code_2023
         }
 
     }
+
+    struct LargeRange
+    {
+        public long Start;
+        public long End;
+
+        public LargeRange() { }
+
+        public LargeRange(long start, long end)
+        {
+            this.Start = start;
+            this.End = end;
+        }
+
+        public static LargeRange FromLength(long start, long length)
+        {
+            return new LargeRange(start, start + length - 1);
+        }
+    }
 }
