@@ -35,6 +35,16 @@ namespace zcarey_Advent_of_Code_2023
             }
         }
 
+        public static IEnumerable<(int Index, T Element)> WithIndex<T>(this IEnumerable<T> elements)
+        {
+            int index = 0;
+            foreach (var element in elements)
+            {
+                yield return (index, element);
+                index++;
+            }
+        }
+
     }
 
     struct LargeRange
