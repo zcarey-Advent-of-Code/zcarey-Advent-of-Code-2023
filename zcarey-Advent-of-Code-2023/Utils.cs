@@ -45,6 +45,17 @@ namespace zcarey_Advent_of_Code_2023
             }
         }
 
+        public static IEnumerable<T> Repeat<T>(this IEnumerable<T> elements)
+        {
+            while(true)
+            {
+                foreach(T element in elements)
+                {
+                    yield return element;
+                }
+            }
+        }
+
     }
 
     struct LargeRange
