@@ -17,13 +17,7 @@ namespace zcarey_Advent_of_Code_2023
             while (currentNode != "ZZZ")
             {
                 nextTurn.MoveNext();
-                if (nextTurn.Current == Direction.Left)
-                {
-                    currentNode = nodes[currentNode].left;
-                } else
-                {
-                    currentNode = nodes[currentNode].right;
-                }
+                FollowPath(nodes, ref currentNode, nextTurn.Current);
 
                 count++;
             }
@@ -33,7 +27,63 @@ namespace zcarey_Advent_of_Code_2023
 
         public object Part2(string input)
         {
-            return "";
+            // There is some AoC nonsense going on here, the inputs form loops
+            // so we just have to find the LCM of the loops.
+            (var turns, var nodes) = ParseInput(input);
+
+            List<string> inputs = new();
+            foreach(var node in nodes.Keys)
+            {
+                if (node.EndsWith('A'))
+                {
+                    inputs.Add(node);
+                }
+            }
+
+            List<long> loopLengths = new();
+            foreach(string start in inputs)
+            {
+                // Follow path until we find the end node
+                string currentNode = start;
+                IEnumerator<Direction> directions = turns.GetEnumerator();
+                while (directions.MoveNext())
+                {
+                    FollowPath(nodes, ref currentNode, directions.Current);
+                    if (currentNode.EndsWith('Z'))
+                    {
+                        break;
+                    }
+                }
+
+                // Now find the loop length
+                long count = 0;
+                while(directions.MoveNext())
+                {
+                    FollowPath(nodes, ref currentNode, directions.Current);
+                    count++;
+                    if (currentNode.EndsWith('Z'))
+                    {
+                        break;
+                    }
+                }
+
+                // Add to list of LCM
+                loopLengths.Add(count);
+            }
+
+            return Utils.LCM(loopLengths);
+        }
+
+        void FollowPath(Dictionary<string, Map> map, ref string node, Direction direction)
+        {
+            if (direction == Direction.Left)
+            {
+                node = map[node].Left;
+            }
+            else
+            {
+                node = map[node].Right;
+            }
         }
 
         enum Direction
@@ -42,10 +92,22 @@ namespace zcarey_Advent_of_Code_2023
             Right
         }
 
-        (IEnumerable<Direction> turns, Dictionary<string, (string left, string right)> nodes) ParseInput(string input)
+        struct Map
+        {
+            public string Left;
+            public string Right;
+
+            public Map(string left, string right)
+            {
+                Left = left;
+                Right = right;
+            }
+        }
+
+        (IEnumerable<Direction> turns, Dictionary<string, Map> nodes) ParseInput(string input)
         {
             Direction[] turns = input.GetLines().First().Select(c => (c == 'L') ? Direction.Left : Direction.Right).ToArray();
-            Dictionary<string, (string left, string right)> nodes = new();
+            Dictionary<string, Map> nodes = new();
 
             foreach(string line in input.GetLines().Skip(2))
             {
@@ -53,7 +115,7 @@ namespace zcarey_Advent_of_Code_2023
                 string left = line.Substring(7, 3);
                 string right = line.Substring(12, 3);
 
-                nodes.Add(key, (left, right));
+                nodes.Add(key, new Map(left, right));
             }
 
             return (turns.Repeat(), nodes);

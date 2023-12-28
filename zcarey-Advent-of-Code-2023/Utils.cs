@@ -56,6 +56,40 @@ namespace zcarey_Advent_of_Code_2023
             }
         }
 
+        public static long GCF(long a, long b)
+        {
+            while (b != 0)
+            {
+                long temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        public static long LCM(long a, long b)
+        {
+            return (a / GCF(a, b)) * b;
+        }
+
+        public static long LCM(IEnumerable<long> elements)
+        {
+            bool first = true;
+            long lcm = 0;
+            foreach(long n in elements)
+            {
+                if (first)
+                {
+                    first = false;
+                    lcm = n;
+                } else
+                {
+                    lcm = LCM(n, lcm);
+                }
+            }
+
+            return lcm;
+        }
     }
 
     struct LargeRange
