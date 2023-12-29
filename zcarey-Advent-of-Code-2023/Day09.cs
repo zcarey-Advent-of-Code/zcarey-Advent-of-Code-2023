@@ -13,29 +13,7 @@ namespace zcarey_Advent_of_Code_2023
             long sum = 0;
             foreach(string line in input.GetLines())
             {
-                long[] oasis = line.Split().Select(long.Parse).ToArray();
-
-                int n = 0;
-                bool nonZero = true;
-                while(nonZero)
-                {
-                    nonZero = false;
-                    for (int i = 0; i < oasis.Length - n - 1; i++)
-                    {
-                        oasis[i] = oasis[i + 1] - oasis[i];
-                        nonZero |= (oasis[i] != 0);
-                    }
-                    n++;
-                }
-
-                // Now calculate what the next value should be
-                for (int i = oasis.Length - n + 1; i < oasis.Length; i++)
-                {
-                    oasis[i] += oasis[i - 1];
-                }
-
-                long predictedNumber = oasis[oasis.Length - 1];
-                sum += predictedNumber;
+                sum += predictNextNumber(line.Split().Select(long.Parse));
             }
 
             return sum;
@@ -43,7 +21,39 @@ namespace zcarey_Advent_of_Code_2023
 
         public object Part2(string input)
         {
-            return "";
+            long sum = 0;
+            foreach(string line in input.GetLines())
+            {
+                sum += predictNextNumber(line.Split().Select(long.Parse).Reverse());
+            }
+
+            return sum;
+        }
+
+        long predictNextNumber(IEnumerable<long> values)
+        {
+            long[] oasis = values.ToArray();
+
+            int n = 0;
+            bool nonZero = true;
+            while (nonZero)
+            {
+                nonZero = false;
+                for (int i = 0; i < oasis.Length - n - 1; i++)
+                {
+                    oasis[i] = oasis[i + 1] - oasis[i];
+                    nonZero |= (oasis[i] != 0);
+                }
+                n++;
+            }
+
+            // Now calculate what the next value should be
+            for (int i = oasis.Length - n + 1; i < oasis.Length; i++)
+            {
+                oasis[i] += oasis[i - 1];
+            }
+
+            return oasis[oasis.Length - 1];
         }
     }
 }
