@@ -17,7 +17,59 @@ namespace zcarey_Advent_of_Code_2023
 
         public object Part2(string input)
         {
-            return "";
+            (Point Start, Pipe[][] Map) = GetMap(input);
+            bool[][] pipeWall = new bool[Map.Length][];
+            for (int i = 0; i < pipeWall.Length; i++)
+            {
+                pipeWall[i] = new bool[Map[i].Length];
+            }
+
+            // Mark which pipes are part of our loop
+            foreach (var pipe in Follow(Map, Start))
+            {
+                Point location = pipe.Location;
+                pipeWall[location.Y][location.X] = true;
+            }
+
+            /*
+             * To find the contained tiles, we will iterate each row from left to right. If a pipe wall (of our loop) is encountered,
+             * then we know tiles encountered after that are contained inside our loop. If the pipe wall is encountered again, then
+             * the tiles after are outside the loop.
+             * Rows of F--J and L--7 are counted as we end up inside the loop, however rows of F---7 and L---J are not since
+             * they are the top/bottom of the loop and we remain on the outside the entire time.
+             */
+            bool insideLoop = false;
+            Pipe lastCorner = new Pipe('.');
+            int count = 0;
+            for(int y = 0; y < Map.Length; y++)
+            {
+                for (int x = 0; x < Map[y].Length; x++)
+                {
+                    if (pipeWall[y][x])
+                    {
+                        Pipe pipe = Map[y][x];
+                        if (pipe.c == '|')
+                        {
+                            insideLoop = !insideLoop;
+                        } else if (pipe.c == 'J' && lastCorner.c == 'F')
+                        {
+                            insideLoop = !insideLoop;
+                        } else if (pipe.c == '7' && lastCorner.c == 'L')
+                        {
+                            insideLoop = !insideLoop;
+                        }
+
+                        if (pipe.c != '-' && pipe.c != '|' && pipe.c != '.') {
+                            lastCorner = pipe;
+                        }
+                    } else if (insideLoop)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
         }
 
         public enum Rotation
@@ -27,23 +79,7 @@ namespace zcarey_Advent_of_Code_2023
             East = 1, 
             West = 3
         }
-/*
-        static Rotation Clockwise(Rotation rot)
-        {
-            return (Rotation)(((int)rot + 1) % 4);
-        }
 
-        static Rotation CounterClockwise(Rotation rot)
-        {
-            if ((int)rot == 0)
-            {
-                return (Rotation)3;
-            } else
-            {
-                return (Rotation)((int)rot - 1);
-            }
-        }
-*/
         struct Pipe
         {
             public char c;
@@ -77,7 +113,7 @@ namespace zcarey_Advent_of_Code_2023
         {
             string[] lines = input.GetLines().ToArray();
             int width = lines[0].Length;
-            int height = lines[1].Length;
+            int height = lines.Length;
 
             Point start = new();
             Pipe[][] map = new Pipe[height][];
@@ -145,7 +181,7 @@ namespace zcarey_Advent_of_Code_2023
             return (start, map);
         }
 
-        IEnumerable<Pipe> Follow(Pipe[][] map, Point start)
+        IEnumerable<(Pipe Pipe, Point Location)> Follow(Pipe[][] map, Point start)
         {
             // Includes start position as last path
             int width = map[0].Length;
@@ -176,7 +212,7 @@ namespace zcarey_Advent_of_Code_2023
                 x += delta.DX;
                 y += delta.DY;
                 rotation = delta.NewRotation;
-                yield return map[y][x];
+                yield return (map[y][x], new Point(x, y));
             } while (x != start.X || y != start.Y);
         }
     }
