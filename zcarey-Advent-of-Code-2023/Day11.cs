@@ -11,46 +11,51 @@ namespace zcarey_Advent_of_Code_2023
     {
         public object Part1(string input)
         {
-            (Space[][] map, bool[] emptyRows, bool[] emptyCols, Point[] galaxies) = ParseInput(input);
+            var map = ParseInput(input);
 
-            Func<Point, Point, int> galaxyDistanceFunc = (Point galaxy1, Point galaxy2) =>
-            {
-                // Check horizontal distance
-                int x1 = Math.Min(galaxy1.X, galaxy2.X);
-                int x2 = Math.Max(galaxy1.X, galaxy2.X);
-                int dx = x2 - x1; 
-                for (int x = x1 + 1; x <= x2 - 1; x++)
-                {
-                    if (emptyCols[x] == true)
-                    {
-                        dx++;
-                    }
-                }
-
-                // Check vertical distance
-                int y1 = Math.Min(galaxy1.Y, galaxy2.Y);
-                int y2 = Math.Max(galaxy1.Y, galaxy2.Y);
-                int dy = y2 - y1;
-                for (int y = y1 + 1; y <= y2 - 1; y++)
-                {
-                    if (emptyRows[y] == true)
-                    {
-                        dy++;
-                    }
-                }
-
-                return dx + dy;
-            };
-
-            return galaxies
+            return map.GalaxyLocations
                 .UniquePairs()
-                .Select(x => galaxyDistanceFunc(x.Pair1, x.Pair2))
+                .Select(x => GetGalaxyDistance(map, x.Pair1, x.Pair2, 1))
                 .Sum();
         }
 
         public object Part2(string input)
         {
-            return "";
+            var map = ParseInput(input);
+
+            return map.GalaxyLocations
+                .UniquePairs()
+                .Select(x => GetGalaxyDistance(map, x.Pair1, x.Pair2, 999999))
+                .Sum();
+        }
+
+        static long GetGalaxyDistance((Space[][] Map, bool[] EmptyRows, bool[] EmptyCols, Point[] Galaxies) map, Point galaxy1, Point galaxy2, long expansion)
+        {
+            // Check horizontal distance
+            int x1 = Math.Min(galaxy1.X, galaxy2.X);
+            int x2 = Math.Max(galaxy1.X, galaxy2.X);
+            long dx = x2 - x1;
+            for (int x = x1 + 1; x <= x2 - 1; x++)
+            {
+                if (map.EmptyCols[x] == true)
+                {
+                    dx += expansion;
+                }
+            }
+
+            // Check vertical distance
+            int y1 = Math.Min(galaxy1.Y, galaxy2.Y);
+            int y2 = Math.Max(galaxy1.Y, galaxy2.Y);
+            long dy = y2 - y1;
+            for (int y = y1 + 1; y <= y2 - 1; y++)
+            {
+                if (map.EmptyRows[y] == true)
+                {
+                    dy += expansion;
+                }
+            }
+
+            return dx + dy;
         }
 
         struct Space
