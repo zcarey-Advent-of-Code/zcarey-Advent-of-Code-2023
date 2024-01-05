@@ -90,6 +90,17 @@ namespace zcarey_Advent_of_Code_2023
 
             return lcm;
         }
+
+        public static IEnumerable<(T Pair1, T Pair2)> UniquePairs<T>(this IList<T> values)
+        {
+            for(int i = 0; i < values.Count - 1; i++)
+            {
+                for (int j = i + 1; j < values.Count; j++)
+                {
+                    yield return (values[i], values[j]);
+                }
+            }
+        }
     }
 
     struct LargeRange
