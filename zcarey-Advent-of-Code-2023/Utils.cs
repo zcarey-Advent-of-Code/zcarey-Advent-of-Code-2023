@@ -24,6 +24,24 @@ namespace zcarey_Advent_of_Code_2023
             return reader.GetLines();
         }
 
+        public static IEnumerable<IEnumerable<string>> GetBlocks(this string str) {
+            StringReader reader = new StringReader(str);
+            while(reader.Peek() >= 0) {
+                yield return GetBlock(reader);
+            }
+        }
+
+        private static IEnumerable<string> GetBlock(StringReader reader) {
+            string? line;
+            while ((line = reader.ReadLine()) != null) {
+                if (string.IsNullOrEmpty(line)) {
+                    yield break;
+                } else {
+                    yield return line;
+                }
+            }
+        }
+
         public static void Increment<T>(this Dictionary<T, int> dict, T key, int inc)
         {
             if (!dict.ContainsKey(key))
